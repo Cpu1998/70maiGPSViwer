@@ -14,7 +14,7 @@ export function useMap(container: Ref<HTMLElement | null>) {
     const m = new mapboxgl.Map({
       container: container.value,
       style: BASEMAP_STYLES.dark as mapboxgl.Style,
-      center: [114.13, 32.09],
+      center: [116.4, 39.9],
       zoom: 10,
       attributionControl: false,
     })
