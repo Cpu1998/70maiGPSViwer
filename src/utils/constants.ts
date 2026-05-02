@@ -2,6 +2,7 @@ export const TRIP_GAP_DEFAULT_SECONDS = 600
 export const MIN_TRIP_POINTS = 5
 export const MIN_TRIP_DISTANCE = 50
 export const SPEED_STOP_KMH = 2
+export const MAX_IMPLIED_SPEED_KMH = 500
 
 export const SPEED_COLOR_STOPS: [number, string][] = [
   [0, '#3fb950'],

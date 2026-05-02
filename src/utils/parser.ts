@@ -1,6 +1,6 @@
 import type { RawRecord, TripSummary } from '../types'
-import { computeTripStats } from './speed'
-import { TRIP_GAP_DEFAULT_SECONDS, MIN_TRIP_POINTS } from './constants'
+import { computeTripStats, haversine } from './speed'
+import { TRIP_GAP_DEFAULT_SECONDS, MIN_TRIP_POINTS, MAX_IMPLIED_SPEED_KMH } from './constants'
 import { formatTime, formatDateKey } from './format'
 
 export interface ColumnarData {
@@ -78,6 +78,74 @@ export function parseRaw(text: string): { data: ColumnarData; skipped: number; s
     skipped,
     segments,
   }
+}
+
+export function filterOutliers(data: ColumnarData): ColumnarData {
+  const { timestamps, lats, lons, speeds, rawSpeeds, accels, signals, sats, count } = data
+  if (count < 3) return data
+
+  const valid = new Uint8Array(count)
+  valid[0] = 1
+  let lastValid = 0
+  let removed = 0
+
+  for (let i = 1; i < count; i++) {
+    const dt = timestamps[i] - timestamps[lastValid]
+    if (dt <= 0) { removed++; continue }
+
+    const dist = haversine(lats[lastValid], lons[lastValid], lats[i], lons[i])
+    const impliedKmh = (dist / dt) * 3.6
+
+    if (impliedKmh > MAX_IMPLIED_SPEED_KMH) {
+      // Check if i+1 is also far from lastValid — if so, this is a legitimate position shift
+      const next = i + 1
+      if (next < count) {
+        const dt2 = timestamps[next] - timestamps[lastValid]
+        if (dt2 > 0) {
+          const dist2 = haversine(lats[lastValid], lons[lastValid], lats[next], lons[next])
+          if ((dist2 / dt2) * 3.6 > MAX_IMPLIED_SPEED_KMH) {
+            valid[i] = 1
+            lastValid = i
+            continue
+          }
+        }
+      }
+      removed++
+    } else {
+      valid[i] = 1
+      lastValid = i
+    }
+  }
+
+  if (removed === 0) return data
+
+  const out = {
+    timestamps: new Float64Array(count - removed),
+    lats: new Float64Array(count - removed),
+    lons: new Float64Array(count - removed),
+    speeds: new Float64Array(count - removed),
+    rawSpeeds: new Float64Array(count - removed),
+    accels: new Float32Array(count - removed),
+    signals: new Float32Array(count - removed),
+    sats: new Float32Array(count - removed),
+    count: count - removed,
+  }
+
+  let j = 0
+  for (let i = 0; i < count; i++) {
+    if (!valid[i]) continue
+    out.timestamps[j] = timestamps[i]
+    out.lats[j] = lats[i]
+    out.lons[j] = lons[i]
+    out.speeds[j] = speeds[i]
+    out.rawSpeeds[j] = rawSpeeds[i]
+    out.accels[j] = accels[i]
+    out.signals[j] = signals[i]
+    out.sats[j] = sats[i]
+    j++
+  }
+
+  return out
 }
 
 export function detectTrips(

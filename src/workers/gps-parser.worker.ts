@@ -1,4 +1,4 @@
-import { parseRaw, detectTrips } from '../utils/parser'
+import { parseRaw, detectTrips, filterOutliers } from '../utils/parser'
 import type { ParseProgress } from '../types'
 
 const ctx = self as unknown as Worker
@@ -17,12 +17,24 @@ ctx.onmessage = (e: MessageEvent) => {
     const { data, skipped, segments } = parseRaw(text)
     postProgress('parsing', 60, data.count, `已解析 ${data.count.toLocaleString()} 条记录`)
 
-    postProgress('detecting-trips', 75, data.count, '正在识别旅程...')
-    const summaries = detectTrips(data, gapSeconds)
+    const filtered = filterOutliers(data)
+    if (filtered.count < data.count) {
+      postProgress('parsing', 65, filtered.count, `已过滤 ${data.count - filtered.count} 个异常点`)
+    }
+
+    postProgress('detecting-trips', 75, filtered.count, '正在识别旅程...')
+    const summaries = detectTrips(filtered, gapSeconds)
     postProgress('detecting-trips', 90, data.count, `已识别 ${summaries.length} 个旅程`)
 
     const transferables = [
-      data.timestamps.buffer,
+      filtered.timestamps.buffer,
+      filtered.lats.buffer,
+      filtered.lons.buffer,
+      filtered.speeds.buffer,
+      filtered.rawSpeeds.buffer,
+      filtered.accels.buffer,
+      filtered.signals.buffer,
+      filtered.sats.buffer,
       data.lats.buffer,
       data.lons.buffer,
       data.speeds.buffer,
@@ -39,9 +51,9 @@ ctx.onmessage = (e: MessageEvent) => {
         type: 'result',
         data: {
           summaries,
-          columnar: data,
+          columnar: filtered,
           stats: {
-            totalRecords: data.count,
+            totalRecords: filtered.count,
             skippedRecords: skipped,
             segmentCount: segments,
             fileSize,
