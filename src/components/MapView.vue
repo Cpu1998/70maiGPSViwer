@@ -3,12 +3,12 @@ import { ref, watch, toRef } from 'vue'
 import { useMap } from '../composables/useMap'
 import { useTripLayers } from '../composables/useTripLayers'
 import { useGpsStore } from '../stores/gps'
+import type { BasemapKey } from '../utils/constants'
 import SpeedLegend from './SpeedLegend.vue'
 
 const container = ref<HTMLElement | null>(null)
 
-const token = import.meta.env.VITE_MAPBOX_TOKEN || localStorage.getItem('mapbox_token') || ''
-const { map, loaded, fitBounds } = useMap(container, token)
+const { map, loaded, currentBasemap, setBasemap, fitBounds } = useMap(container)
 
 const store = useGpsStore()
 
@@ -26,12 +26,10 @@ watch(() => store.selectedTripId, (id) => {
   if (trip) fitBounds(trip.bounds)
 })
 
-// After overview loaded, fit to all data
 watch(() => store.overviewGeoJSON, (geojson) => {
   if (!geojson || geojson.features.length === 0) return
   const m = map.value
   if (!m) return
-  // Calculate total bounds
   let west = Infinity, south = Infinity, east = -Infinity, north = -Infinity
   for (const f of geojson.features) {
     if (f.geometry.type === 'LineString') {
@@ -47,15 +45,26 @@ watch(() => store.overviewGeoJSON, (geojson) => {
     m.fitBounds([west, south, east, north], { padding: 40, duration: 1500 })
   }
 })
+
+const basemapOptions: { key: BasemapKey; label: string }[] = [
+  { key: 'dark', label: '暗色' },
+  { key: 'light', label: '亮色' },
+  { key: 'voyager', label: '彩色' },
+  { key: 'vector', label: '矢量' },
+  { key: 'topo', label: '地形' },
+  { key: 'satellite', label: '卫星' },
+]
 </script>
 
 <template>
   <div class="map-container" ref="container">
-    <div class="map-placeholder" v-if="!token">
-      <div class="token-prompt">
-        <p>请设置 Mapbox Access Token</p>
-        <p class="hint">在项目根目录 .env 文件中设置 VITE_MAPBOX_TOKEN</p>
-      </div>
+    <div class="basemap-switcher">
+      <button
+        v-for="opt in basemapOptions"
+        :key="opt.key"
+        :class="{ active: currentBasemap === opt.key }"
+        @click="setBasemap(opt.key)"
+      >{{ opt.label }}</button>
     </div>
     <SpeedLegend />
   </div>
@@ -68,22 +77,32 @@ watch(() => store.overviewGeoJSON, (geojson) => {
   position: relative;
 }
 
-.map-placeholder {
-  width: 100%;
-  height: 100%;
+.basemap-switcher {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0d1117;
+  gap: 2px;
+  background: #161b22cc;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #30363d;
+  backdrop-filter: blur(8px);
 }
-
-.token-prompt {
-  text-align: center;
-  color: #e6edf3;
-}
-.token-prompt .hint {
+.basemap-switcher button {
+  background: none;
+  border: none;
   color: #8b949e;
-  font-size: 12px;
-  margin-top: 8px;
+  padding: 5px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.basemap-switcher button:hover { color: #e6edf3; }
+.basemap-switcher button.active {
+  background: #58a6ff;
+  color: #fff;
 }
 </style>

@@ -22,4 +22,87 @@ export const SPEED_COLOR_EXPRESSION = [
   ...SPEED_COLOR_STOPS.flat(),
 ]
 
-export const DEFAULT_MAP_STYLE = 'mapbox://styles/mapbox/standard'
+export type BasemapKey = 'dark' | 'light' | 'voyager' | 'vector' | 'topo' | 'satellite'
+
+export const BASEMAP_STYLES: Record<BasemapKey, string | object> = {
+  dark: {
+    version: 8,
+    sources: {
+      'carto-dark': {
+        type: 'raster',
+        tiles: ['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+        tileSize: 256,
+        attribution: '&copy; CARTO &copy; OSM',
+      },
+    },
+    layers: [{ id: 'carto-dark', type: 'raster', source: 'carto-dark' }],
+  },
+  light: {
+    version: 8,
+    sources: {
+      'carto-light': {
+        type: 'raster',
+        tiles: ['https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'],
+        tileSize: 256,
+        attribution: '&copy; CARTO &copy; OSM',
+      },
+    },
+    layers: [{ id: 'carto-light', type: 'raster', source: 'carto-light' }],
+  },
+  voyager: {
+    version: 8,
+    sources: {
+      'carto-voyager': {
+        type: 'raster',
+        tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'],
+        tileSize: 256,
+        attribution: '&copy; CARTO &copy; OSM',
+      },
+    },
+    layers: [{ id: 'carto-voyager', type: 'raster', source: 'carto-voyager' }],
+  },
+  vector: {
+    version: 8,
+    sources: {
+      osm: {
+        type: 'raster',
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        attribution: '&copy; OpenStreetMap',
+      },
+    },
+    layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+  },
+  topo: {
+    version: 8,
+    sources: {
+      opentopomap: {
+        type: 'raster',
+        tiles: ['https://tile.opentopomap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        attribution: '&copy; OpenTopoMap &copy; OSM',
+      },
+    },
+    layers: [{ id: 'opentopomap', type: 'raster', source: 'opentopomap' }],
+  },
+  satellite: {
+    version: 8,
+    sources: {
+      'esri-imagery': {
+        type: 'raster',
+        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+        attribution: '&copy; Esri',
+      },
+      'esri-reference': {
+        type: 'raster',
+        tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+        tileSize: 256,
+      },
+    },
+    layers: [
+      { id: 'esri-imagery', type: 'raster', source: 'esri-imagery' },
+      { id: 'esri-reference', type: 'raster', source: 'esri-reference' },
+    ],
+  },
+}

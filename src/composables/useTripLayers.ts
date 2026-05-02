@@ -71,6 +71,16 @@ export function useTripLayers(
     }
   }
 
+  function applyData() {
+    const m = map.value
+    if (!m) return
+    const empty = { type: 'FeatureCollection', features: [] }
+    const src = (id: string) => m.getSource(id) as GeoJSONSource | undefined
+    src(OVERVIEW_SOURCE_ID)?.setData(overview.value || empty)
+    src(ACTIVE_SOURCE_ID)?.setData(active.value || empty)
+    src(ENDPOINTS_SOURCE_ID)?.setData(endpoints.value || empty)
+  }
+
   function updateSource(sourceId: string, geojson: FeatureCollection | null) {
     const m = map.value
     if (!m || !loaded.value) return
@@ -79,7 +89,18 @@ export function useTripLayers(
     src?.setData(geojson || { type: 'FeatureCollection', features: [] })
   }
 
-  watch(loaded, (v) => { if (v) initLayers() }, { immediate: true })
+  // Re-build layers + data after any style change
+  watch(map, (m, oldM) => {
+    if (!m) return
+    const handler = () => {
+      initLayers()
+      applyData()
+      loaded.value = true
+    }
+    m.on('styledata', handler)
+    if (oldM) oldM.off('styledata', handler)
+  }, { immediate: true })
+
   watch(overview, (g) => updateSource(OVERVIEW_SOURCE_ID, g))
   watch(active, (g) => updateSource(ACTIVE_SOURCE_ID, g))
   watch(endpoints, (g) => updateSource(ENDPOINTS_SOURCE_ID, g))
