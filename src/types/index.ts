@@ -47,4 +47,39 @@ export interface ParseResult {
   }
 }
 
+export interface TripFilter {
+  dateStart: string
+  dateEnd: string
+  minDistance: number
+  maxDistance: number
+  minDuration: number
+  maxDuration: number
+  minMaxSpeed: number
+  maxMaxSpeed: number
+}
+
+export type SortField = 'time' | 'distance' | 'maxSpeed' | 'avgSpeed' | 'duration'
+export type SortDir = 'asc' | 'desc'
+
+export interface TripSort {
+  field: SortField
+  dir: SortDir
+}
+
+export const DEFAULT_FILTER: TripFilter = {
+  dateStart: '',
+  dateEnd: '',
+  minDistance: 0,
+  maxDistance: 0,
+  minDuration: 0,
+  maxDuration: 0,
+  minMaxSpeed: 0,
+  maxMaxSpeed: 0,
+}
+
+export const DEFAULT_SORT: TripSort = {
+  field: 'time',
+  dir: 'asc',
+}
+
 export const SPEED_STOP_KMH = 2

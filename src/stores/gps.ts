@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref, shallowRef } from 'vue'
-import type { TripSummary, ParseProgress } from '../types'
+import { ref, shallowRef, computed } from 'vue'
+import type { TripSummary, ParseProgress, TripFilter, TripSort } from '../types'
+import { DEFAULT_FILTER, DEFAULT_SORT } from '../types'
 import type { ColumnarData } from '../utils/parser'
 import type { FeatureCollection } from 'geojson'
 import { tripToSpeedGeoJSON, tripToOverviewGeoJSON, tripEndpoints } from '../utils/geojson'
@@ -15,6 +16,8 @@ export const useGpsStore = defineStore('gps', () => {
   const isParsing = ref(false)
   const parseProgress = ref<ParseProgress | null>(null)
   const error = ref<string | null>(null)
+  const filter = ref<TripFilter>({ ...DEFAULT_FILTER })
+  const sort = ref<TripSort>({ ...DEFAULT_SORT })
   const fileStats = ref<{
     totalRecords: number
     skippedRecords: number
@@ -22,6 +25,49 @@ export const useGpsStore = defineStore('gps', () => {
     fileSize: number
     fileName: string
   } | null>(null)
+
+  const filteredSummaries = computed(() => {
+    let list = summaries.value
+
+    if (filter.value.dateStart) {
+      list = list.filter(t => t.dateLabel >= filter.value.dateStart)
+    }
+    if (filter.value.dateEnd) {
+      list = list.filter(t => t.dateLabel <= filter.value.dateEnd)
+    }
+    if (filter.value.minDistance > 0) {
+      list = list.filter(t => t.distance / 1000 >= filter.value.minDistance)
+    }
+    if (filter.value.maxDistance > 0) {
+      list = list.filter(t => t.distance / 1000 <= filter.value.maxDistance)
+    }
+    if (filter.value.minDuration > 0) {
+      list = list.filter(t => t.duration / 60 >= filter.value.minDuration)
+    }
+    if (filter.value.maxDuration > 0) {
+      list = list.filter(t => t.duration / 60 <= filter.value.maxDuration)
+    }
+    if (filter.value.minMaxSpeed > 0) {
+      list = list.filter(t => t.maxSpeed >= filter.value.minMaxSpeed)
+    }
+    if (filter.value.maxMaxSpeed > 0) {
+      list = list.filter(t => t.maxSpeed <= filter.value.maxMaxSpeed)
+    }
+
+    const { field, dir } = sort.value
+    const mul = dir === 'asc' ? 1 : -1
+    const sorted = [...list].sort((a, b) => {
+      switch (field) {
+        case 'time': return (a.startTime - b.startTime) * mul
+        case 'distance': return (a.distance - b.distance) * mul
+        case 'maxSpeed': return (a.maxSpeed - b.maxSpeed) * mul
+        case 'avgSpeed': return (a.avgSpeed - b.avgSpeed) * mul
+        case 'duration': return (a.duration - b.duration) * mul
+        default: return 0
+      }
+    })
+    return sorted
+  })
 
   let worker: Worker | null = null
 
@@ -138,12 +184,15 @@ export const useGpsStore = defineStore('gps', () => {
     columnar.value = null
     fileStats.value = null
     error.value = null
+    filter.value = { ...DEFAULT_FILTER }
+    sort.value = { ...DEFAULT_SORT }
     if (worker) { worker.terminate(); worker = null }
   }
 
   return {
     summaries, selectedTripId, activeTripGeoJSON, activeEndpoints,
     overviewGeoJSON, columnar, isParsing, parseProgress, error, fileStats,
+    filter, sort, filteredSummaries,
     loadFile, selectTrip, clearAll, buildOverview,
   }
 })

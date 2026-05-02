@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import FileLoader from './FileLoader.vue'
+import TripFilter from './TripFilter.vue'
 import TripList from './TripList.vue'
 import { useGpsStore } from '../stores/gps'
 
@@ -13,6 +14,7 @@ const store = useGpsStore()
       <button v-if="store.summaries.length > 0" class="clear-btn" @click="store.clearAll()" title="清除数据">✕</button>
     </div>
     <FileLoader />
+    <TripFilter />
     <TripList />
   </aside>
 </template>

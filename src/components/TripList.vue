@@ -10,7 +10,7 @@ const grouped = computed(() => {
   let currentKey = ''
   let currentTrips: typeof store.summaries = []
 
-  for (const trip of store.summaries) {
+  for (const trip of store.filteredSummaries) {
     const key = trip.dateLabel
     if (key !== currentKey) {
       if (currentTrips.length > 0) groups.push({ dateKey: currentKey, trips: currentTrips })
@@ -24,6 +24,12 @@ const grouped = computed(() => {
   return groups
 })
 
+const filterInfo = computed(() => {
+  const total = store.summaries.length
+  const filtered = store.filteredSummaries.length
+  return filtered === total ? `${total} 个旅程` : `${filtered} / ${total} 个旅程`
+})
+
 function selectTrip(tripId: string) {
   store.selectTrip(tripId)
 }
@@ -32,7 +38,7 @@ function selectTrip(tripId: string) {
 <template>
   <div class="trip-list" v-if="store.summaries.length > 0">
     <div class="list-header">
-      共 {{ store.summaries.length }} 个旅程
+      共 {{ filterInfo }}
     </div>
     <div class="list-scroll">
       <template v-for="group in grouped" :key="group.dateKey">
