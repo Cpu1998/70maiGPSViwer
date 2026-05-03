@@ -34,3 +34,7 @@ npm run build
 ```
 
 无需配置任何 API Key，地图底图使用免费的 CARTO / OSM / Esri 瓦片服务。
+
+## 版本历史
+
+见 [CHANGELOG.md](./CHANGELOG.md)
