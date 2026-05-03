@@ -86,9 +86,10 @@ const basemapOptions: { key: BasemapKey; label: string }[] = [
   gap: 2px;
   background: #161b22cc;
   border-radius: 6px;
-  overflow: hidden;
+  overflow-x: auto;
   border: 1px solid #30363d;
   backdrop-filter: blur(8px);
+  max-width: calc(100% - 60px);
 }
 .basemap-switcher button {
   background: none;
@@ -99,6 +100,7 @@ const basemapOptions: { key: BasemapKey; label: string }[] = [
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .basemap-switcher button:hover { color: #e6edf3; }
 .basemap-switcher button.active {

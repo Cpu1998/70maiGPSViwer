@@ -6,13 +6,19 @@ import { useGpsStore } from '../stores/gps'
 
 const store = useGpsStore()
 const version = __APP_VERSION__
+
+const emit = defineEmits<{ close: [] }>()
+const isMobile = window.innerWidth < 768
 </script>
 
 <template>
   <aside class="sidebar-inner">
     <div class="sidebar-header">
       <h1 class="logo">70mai GPS 查看器 <span class="version">v{{ version }}</span></h1>
-      <button v-if="store.summaries.length > 0" class="clear-btn" @click="store.clearAll()" title="清除数据">✕</button>
+      <div class="header-actions">
+        <button v-if="store.summaries.length > 0" class="clear-btn" @click="store.clearAll()" title="清除数据">✕</button>
+        <button v-if="isMobile" class="close-btn" @click="emit('close')" title="关闭">&#x2190;</button>
+      </div>
     </div>
     <FileLoader />
     <TripFilter />
@@ -62,4 +68,26 @@ const version = __APP_VERSION__
   transition: all 0.15s;
 }
 .clear-btn:hover { border-color: #f85149; color: #f85149; }
+
+.header-actions { display: flex; gap: 6px; }
+
+.close-btn {
+  background: none;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.close-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+@media (max-width: 767px) {
+  .close-btn { display: flex; }
+}
 </style>

@@ -25,7 +25,7 @@ const store = useGpsStore()
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 6px 16px;
+  padding: 6px 12px;
   background: rgba(22, 27, 34, 0.85);
   border-top: 1px solid #21262d;
   font-size: 12px;
@@ -34,6 +34,7 @@ const store = useGpsStore()
   align-items: center;
   gap: 4px;
   z-index: 10;
+  flex-wrap: wrap;
 }
 .sep { margin: 0 4px; color: #30363d; }
 </style>

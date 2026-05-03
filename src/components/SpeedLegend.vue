@@ -43,6 +43,12 @@ import { SPEED_COLOR_STOPS } from '../utils/constants'
 .gradient { width: 120px; }
 .bar { height: 8px; border-radius: 4px; }
 
+@media (max-width: 767px) {
+  .speed-legend { padding: 8px 10px; bottom: 36px; right: 8px; }
+  .gradient { width: 80px; }
+  .ticks { width: 80px; left: 40px; }
+}
+
 .ticks {
   position: absolute;
   bottom: 4px;
