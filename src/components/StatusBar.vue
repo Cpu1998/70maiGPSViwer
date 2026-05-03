@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useGpsStore } from '../stores/gps'
 import { formatDistance } from '../utils/format'
 
 const store = useGpsStore()
+const props = defineProps<{ sidebarOpen?: boolean }>()
+const isMobile = window.innerWidth < 768
+const visible = computed(() => !(isMobile && props.sidebarOpen))
 </script>
 
 <template>
-  <div class="status-bar" v-if="store.fileStats">
+  <div class="status-bar" v-if="store.fileStats && visible">
     <span>{{ store.fileStats.fileName }}</span>
     <span class="sep">|</span>
     <span>{{ store.fileStats.totalRecords.toLocaleString() }} 条记录</span>

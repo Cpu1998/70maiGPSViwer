@@ -30,7 +30,7 @@ watch(() => store.selectedTripId, (id) => {
     <Sidebar class="sidebar" v-show="sidebarOpen" @close="sidebarOpen = false" />
     <div class="main-area">
       <MapView :sidebar-open="sidebarOpen" />
-      <StatusBar />
+      <StatusBar :sidebar-open="sidebarOpen" />
     </div>
   </div>
 </template>

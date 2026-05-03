@@ -127,7 +127,7 @@ const basemapOptions: { key: BasemapKey; label: string }[] = [
         @click="setBasemap(opt.key)"
       >{{ opt.label }}</button>
     </div>
-    <SpeedLegend />
+    <SpeedLegend v-if="showBasemap" />
   </div>
 </template>
 
