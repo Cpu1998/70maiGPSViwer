@@ -18,6 +18,7 @@ export function useTripLayers(
   overview: Ref<FeatureCollection | null>,
   active: Ref<FeatureCollection | null>,
   endpoints: Ref<FeatureCollection | null>,
+  selectedTripId: Ref<string | null>,
 ) {
   function initLayers() {
     const m = map.value
@@ -51,7 +52,7 @@ export function useTripLayers(
     }
 
     if (!m.getSource(ACTIVE_SOURCE_ID)) {
-      m.addSource(ACTIVE_SOURCE_ID, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+      m.addSource(ACTIVE_SOURCE_ID, { type: 'geojson', data: { type: 'FeatureCollection' as const, features: [] } })
     }
     if (!m.getLayer(ACTIVE_LAYER_ID)) {
       m.addLayer({
@@ -78,7 +79,7 @@ export function useTripLayers(
     }
 
     if (!m.getSource(ENDPOINTS_SOURCE_ID)) {
-      m.addSource(ENDPOINTS_SOURCE_ID, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+      m.addSource(ENDPOINTS_SOURCE_ID, { type: 'geojson', data: { type: 'FeatureCollection' as const, features: [] } })
     }
     if (!m.getLayer(ENDPOINTS_LAYER_ID)) {
       m.addLayer({
@@ -92,6 +93,33 @@ export function useTripLayers(
           'circle-stroke-width': 2,
         },
       })
+    }
+
+    updateHighlight()
+  }
+
+  function updateHighlight() {
+    const m = map.value
+    if (!m || !m.getLayer(OVERVIEW_LAYER_ID)) return
+
+    const id = selectedTripId.value
+    if (id) {
+      m.setPaintProperty(OVERVIEW_LAYER_ID, 'line-opacity', [
+        'case', ['==', ['get', 'tripId'], id], 1, 0.15,
+      ] as ExpressionSpecification)
+      m.setPaintProperty(OVERVIEW_LAYER_ID, 'line-width', [
+        'interpolate', ['linear'], ['zoom'],
+        5, ['case', ['==', ['get', 'tripId'], id], 2, 0.3] as ExpressionSpecification,
+        10, ['case', ['==', ['get', 'tripId'], id], 4, 0.8] as ExpressionSpecification,
+        15, ['case', ['==', ['get', 'tripId'], id], 6, 1] as ExpressionSpecification,
+      ] as ExpressionSpecification)
+      m.setPaintProperty(OVERVIEW_LAYER_ID, 'line-color', [
+        'case', ['==', ['get', 'tripId'], id], '#88aaff', '#6688cc',
+      ] as ExpressionSpecification)
+    } else {
+      m.setPaintProperty(OVERVIEW_LAYER_ID, 'line-opacity', 0.6)
+      m.setPaintProperty(OVERVIEW_LAYER_ID, 'line-width', ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 2, 15, 3] as ExpressionSpecification)
+      m.setPaintProperty(OVERVIEW_LAYER_ID, 'line-color', '#6688cc')
     }
   }
 
@@ -128,4 +156,5 @@ export function useTripLayers(
   watch(overview, (g) => updateSource(OVERVIEW_SOURCE_ID, g))
   watch(active, (g) => updateSource(ACTIVE_SOURCE_ID, g))
   watch(endpoints, (g) => updateSource(ENDPOINTS_SOURCE_ID, g))
+  watch(selectedTripId, () => updateHighlight())
 }

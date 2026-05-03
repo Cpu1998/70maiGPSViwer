@@ -25,6 +25,7 @@ useTripLayers(
   toRef(store, 'overviewGeoJSON'),
   toRef(store, 'activeTripGeoJSON'),
   toRef(store, 'activeEndpoints'),
+  toRef(store, 'selectedTripId'),
 )
 
 // Click on map line to select trip
