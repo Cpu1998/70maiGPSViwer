@@ -10,7 +10,7 @@ function speedBucket(kmh: number): number {
   return 0
 }
 
-export function tripToSpeedGeoJSON(records: RawRecord[]): FeatureCollection {
+export function tripToSpeedGeoJSON(records: RawRecord[], tripId?: string): FeatureCollection {
   if (records.length < 2) return { type: 'FeatureCollection', features: [] }
 
   const features: Feature[] = []
@@ -22,7 +22,7 @@ export function tripToSpeedGeoJSON(records: RawRecord[]): FeatureCollection {
     const bucket = speedBucket(kmh)
 
     if (bucket !== currentBucket && currentCoords.length >= 2) {
-      features.push(makeSegment(currentCoords, currentBucket))
+      features.push(makeSegment(currentCoords, currentBucket, tripId))
       currentCoords = [currentCoords[currentCoords.length - 1]]
     }
 
@@ -31,17 +31,17 @@ export function tripToSpeedGeoJSON(records: RawRecord[]): FeatureCollection {
   }
 
   if (currentCoords.length >= 2) {
-    features.push(makeSegment(currentCoords, currentBucket))
+    features.push(makeSegment(currentCoords, currentBucket, tripId))
   }
 
   return { type: 'FeatureCollection', features }
 }
 
-function makeSegment(coords: number[][], bucket: number): Feature<LineString> {
+function makeSegment(coords: number[][], bucket: number, tripId?: string): Feature<LineString> {
   return {
     type: 'Feature',
     geometry: { type: 'LineString', coordinates: coords },
-    properties: { speed: bucket },
+    properties: { speed: bucket, ...(tripId ? { tripId } : {}) },
   }
 }
 

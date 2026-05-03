@@ -140,7 +140,7 @@ export const useGpsStore = defineStore('gps', () => {
       })
     }
 
-    activeTripGeoJSON.value = tripToSpeedGeoJSON(records)
+    activeTripGeoJSON.value = tripToSpeedGeoJSON(records, tripId)
     activeEndpoints.value = tripEndpoints(records)
   }
 
@@ -169,6 +169,9 @@ export const useGpsStore = defineStore('gps', () => {
         })
       }
       const fc = tripToOverviewGeoJSON(records, 0.0002)
+      for (const f of fc.features) {
+        f.properties = { ...f.properties, tripId: trip.id }
+      }
       features.push(...fc.features)
     }
 

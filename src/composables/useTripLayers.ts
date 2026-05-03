@@ -5,8 +5,10 @@ import { SPEED_COLOR_EXPRESSION } from '../utils/constants'
 
 const OVERVIEW_SOURCE_ID = 'overview'
 const OVERVIEW_LAYER_ID = 'overview-lines'
+const OVERVIEW_HIT_LAYER_ID = 'overview-hit'
 const ACTIVE_SOURCE_ID = 'active-trip'
 const ACTIVE_LAYER_ID = 'active-trip-lines'
+const ACTIVE_HIT_LAYER_ID = 'active-hit'
 const ENDPOINTS_SOURCE_ID = 'endpoints'
 const ENDPOINTS_LAYER_ID = 'endpoints'
 
@@ -36,6 +38,17 @@ export function useTripLayers(
         },
       })
     }
+    if (!m.getLayer(OVERVIEW_HIT_LAYER_ID)) {
+      m.addLayer({
+        id: OVERVIEW_HIT_LAYER_ID,
+        source: OVERVIEW_SOURCE_ID,
+        type: 'line',
+        paint: {
+          'line-color': 'transparent',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 10, 10, 14, 15, 20] as ExpressionSpecification,
+        },
+      })
+    }
 
     if (!m.getSource(ACTIVE_SOURCE_ID)) {
       m.addSource(ACTIVE_SOURCE_ID, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
@@ -49,6 +62,17 @@ export function useTripLayers(
           'line-color': SPEED_COLOR_EXPRESSION as unknown as ExpressionSpecification,
           'line-width': ['interpolate', ['linear'], ['zoom'], 8, 2, 12, 4, 16, 6] as ExpressionSpecification,
           'line-opacity': 0.9,
+        },
+      })
+    }
+    if (!m.getLayer(ACTIVE_HIT_LAYER_ID)) {
+      m.addLayer({
+        id: ACTIVE_HIT_LAYER_ID,
+        source: ACTIVE_SOURCE_ID,
+        type: 'line',
+        paint: {
+          'line-color': 'transparent',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 8, 14, 12, 18, 16, 22] as ExpressionSpecification,
         },
       })
     }

@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, toRef } from 'vue'
+import mapboxgl from 'mapbox-gl'
+import type { MapMouseEvent } from 'mapbox-gl'
 import { useMap } from '../composables/useMap'
 import { useTripLayers } from '../composables/useTripLayers'
 import { useGpsStore } from '../stores/gps'
 import type { BasemapKey } from '../utils/constants'
+import { formatDistance, formatDuration } from '../utils/format'
 import SpeedLegend from './SpeedLegend.vue'
 
 const container = ref<HTMLElement | null>(null)
@@ -19,6 +22,59 @@ useTripLayers(
   toRef(store, 'activeTripGeoJSON'),
   toRef(store, 'activeEndpoints'),
 )
+
+// Click on map line to select trip
+let popup: mapboxgl.Popup | null = null
+
+watch(map, (m) => {
+  if (!m) return
+  m.on('click', (e: MapMouseEvent) => {
+    const features = m.queryRenderedFeatures(e.point, {
+      layers: ['overview-hit', 'active-hit'],
+    })
+    if (features.length === 0) return
+
+    const seen = new Set<string>()
+    const tripIds: string[] = []
+    for (const f of features) {
+      const id = f.properties?.tripId as string | undefined
+      if (id && !seen.has(id)) { seen.add(id); tripIds.push(id) }
+    }
+    if (tripIds.length === 0) return
+
+    if (tripIds.length === 1) {
+      store.selectTrip(tripIds[0])
+      return
+    }
+
+    // Multiple trips: build popup HTML
+    const items = tripIds.map(id => {
+      const t = store.summaries.find(s => s.id === id)!
+      return `<div class="pick-item" data-id="${t.id}">
+        <div class="pick-time">${t.timeLabel}</div>
+        <div class="pick-info">${formatDistance(t.distance)} · ${formatDuration(t.duration)}</div>
+      </div>`
+    }).join('')
+
+    if (popup) popup.remove()
+    popup = new mapboxgl.Popup({ closeOnClick: true, offset: 10, maxWidth: '220px', className: 'trip-picker-popup' })
+      .setLngLat(e.lngLat)
+      .setHTML(`<div class="pick-list">${items}</div>`)
+      .addTo(m)
+      .on('close', () => { popup = null })
+
+    // Bind click events on items
+    const el = popup.getElement()
+    el?.querySelectorAll('.pick-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const id = (item as HTMLElement).dataset.id
+        if (id) { store.selectTrip(id); popup?.remove() }
+      })
+    })
+  })
+  m.on('mouseenter', 'overview-hit', () => { m.getCanvas().style.cursor = 'pointer' })
+  m.on('mouseleave', 'overview-hit', () => { m.getCanvas().style.cursor = '' })
+})
 
 watch(() => store.selectedTripId, (id) => {
   if (!id) return
@@ -107,4 +163,25 @@ const basemapOptions: { key: BasemapKey; label: string }[] = [
   background: #58a6ff;
   color: #fff;
 }
+</style>
+
+<style>
+/* Global: trip picker popup */
+.trip-picker-popup .mapboxgl-popup-content {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 4px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  min-width: 160px;
+}
+.trip-picker-popup .mapboxgl-popup-tip { border-top-color: #161b22; }
+.pick-item {
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pick-item:hover { background: #1c2128; }
+.pick-time { font-size: 13px; font-weight: 600; color: #e6edf3; }
+.pick-info { font-size: 11px; color: #8b949e; margin-top: 2px; }
 </style>
