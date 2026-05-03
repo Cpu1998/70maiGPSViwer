@@ -23,15 +23,13 @@ watch(() => store.selectedTripId, (id) => {
   <div class="app-layout" :class="{ 'sidebar-open': sidebarOpen }">
     <button
       class="sidebar-toggle"
-      @click="sidebarOpen = !sidebarOpen"
-      :title="sidebarOpen ? '收起面板' : '展开面板'"
-    >
-      <span v-if="!sidebarOpen">&#9776;</span>
-      <span v-else>&#10005;</span>
-    </button>
+      v-show="!sidebarOpen"
+      @click="sidebarOpen = true"
+      title="展开面板"
+    >&#9776;</button>
     <Sidebar class="sidebar" v-show="sidebarOpen" @close="sidebarOpen = false" />
     <div class="main-area">
-      <MapView />
+      <MapView :sidebar-open="sidebarOpen" />
       <StatusBar />
     </div>
   </div>

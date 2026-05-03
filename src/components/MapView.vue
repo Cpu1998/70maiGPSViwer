@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, toRef } from 'vue'
+import { ref, watch, toRef, computed } from 'vue'
 import mapboxgl from 'mapbox-gl'
 import type { MapMouseEvent } from 'mapbox-gl'
 import { useMap } from '../composables/useMap'
@@ -8,6 +8,10 @@ import { useGpsStore } from '../stores/gps'
 import type { BasemapKey } from '../utils/constants'
 import { formatDistance, formatDuration } from '../utils/format'
 import SpeedLegend from './SpeedLegend.vue'
+
+const props = defineProps<{ sidebarOpen?: boolean }>()
+const isMobile = window.innerWidth < 768
+const showBasemap = computed(() => !(isMobile && props.sidebarOpen))
 
 const container = ref<HTMLElement | null>(null)
 
@@ -114,7 +118,7 @@ const basemapOptions: { key: BasemapKey; label: string }[] = [
 
 <template>
   <div class="map-container" ref="container">
-    <div class="basemap-switcher">
+    <div class="basemap-switcher" v-if="showBasemap">
       <button
         v-for="opt in basemapOptions"
         :key="opt.key"
