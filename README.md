@@ -2,7 +2,7 @@
 
 70迈 行车记录仪 GPSData 文件的可视化工具，支持轨迹回放、速度分析和行程管理。
 
-**在线体验：** https://seven.1461375468.workers.dev/
+**GitHub：** https://github.com/Cpu1998/70maiGPSViwer | **在线体验：** https://seven.realtool.workers.dev/
 
 ## 功能
 
